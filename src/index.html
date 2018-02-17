@@ -1,0 +1,75 @@
+<html>
+<style>
+</style>
+<body>
+    <input type="text" />
+    <canvas width="800px", height="400px"></canvas>
+
+    <script>
+        function loadImage(src) {
+            return new Promise((res, rej) => {
+                var img = new Image()
+                img.onload = () => res(img)
+                img.onerror = rej
+                img.src = src
+            })
+        }
+
+        const w = 24
+        const h = 32
+            
+        class TextDrawer {
+            
+            constructor(images) {
+                [this.text, this.back] = images
+                this.canvas = document.querySelector('canvas')
+                this.ctx = this.canvas.getContext('2d')
+                this.input = document.querySelector('input')
+            }
+            
+            listen() {
+                var phase = 'The quick brown fox jumps over the lazy dog.'
+                this.input.addEventListener('input', () => {
+                    // clear all
+                    this.ctx.fillStyle = 'white'
+                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
+                    var v = this.input.value
+                    for (var i = 0; i < v.length; i++) {
+                        this.drawChar(i, 0, v[i], phase[i])
+                    }
+                })
+            }
+            
+            drawSprite(x, y, img, char) {
+                var code = char.charCodeAt(0) - 32 
+                var sx = code % 16
+                var sy = Math.trunc(code / 16)
+                this.ctx.drawImage(img, sx * w, sy * h, w, h, x * w, y  * h, w, h)
+            }
+
+            drawChar(x, y, char, correct) {
+                // First draw red background
+                this.ctx.fillStyle = 'red'
+                this.ctx.fillRect(x * w, y * h, w, h)
+                
+                // And now draw correct green symbol
+                this.drawSprite(x, y, this.text, char)
+                // Then the transpanret overlay
+                this.drawSprite(x, y, this.back, correct)
+            }
+
+        }       
+        
+        function ready(images) {
+            // Images loaded - we are ready to start drawing
+            var drawer = new TextDrawer(images)
+            drawer.listen()
+        }
+
+        Promise.all([
+            loadImage('text.png'),
+            loadImage('back.png')
+        ]).then(resp => ready(resp))
+    </script>
+</body>
+</html>
